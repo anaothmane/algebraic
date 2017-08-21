@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# __coconut_hash__ = 0x9abecc52
+# type: ignore
 
 # Compiled with Coconut version 1.2.3 [Colonel]
+
+"""Built-in Coconut utilities."""
 
 # Coconut Header: --------------------------------------------------------
 
@@ -398,24 +400,3 @@ def fmap(func, obj):
         return "".join(args)
     return obj.__class__(args)
 _coconut_MatchError, _coconut_count, _coconut_enumerate, _coconut_reversed, _coconut_map, _coconut_tee, _coconut_zip, reduce, takewhile, dropwhile = MatchError, count, enumerate, reversed, map, tee, zip, _coconut.functools.reduce, _coconut.itertools.takewhile, _coconut.itertools.dropwhile
-
-# Compiled Coconut: ------------------------------------------------------
-
-import pandas as _pd
-import numpy as _np
-from functools import lru_cache
-
-class D1(_coconut.collections.namedtuple("D1", "series")):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-    def __repr__(self):
-        return f"{self.__class__}({self.series.name})"
-
-class Observation(_coconut.collections.namedtuple("Observation", "series"), D1):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-class Feature(_coconut.collections.namedtuple("Feature", "series"), D1):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-
-computation = lru_cache(maxsize=128)(property)

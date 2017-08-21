@@ -1,5 +1,8 @@
-coco:
+coco: ## turns on the Coconut watchdog
 	coconut --target 36 -w .
+
+cocodev:
+	coconut --target 36 --no-tco -w .
 
 .PHONY: clean clean-test clean-pyc clean-build docs help
 .DEFAULT_GOAL := help

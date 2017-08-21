@@ -1,0 +1,12 @@
+import pandas as _pd
+import numpy as _np
+from functools import lru_cache
+
+data D1(series):
+  def __repr__(self) =
+    f"{self.__class__}({self.series.name})"
+
+data Observation(series) from D1
+data Feature(series) from D1
+
+computation = lru_cache(maxsize=128)(property)
