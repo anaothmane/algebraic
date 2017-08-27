@@ -1,43 +1,33 @@
-from pytest import fixture
+from pytest import fixture, raises
 import algebraic as al
 import seaborn as sns
 import pandas as pd
 import numpy as np
 
-data Question(series) from al.Feature:
-  @al.computation
-  def spanned(self) =
-    min_, max_ = self.series.min(), self.series.max()
-    (self.series - max_)/(min_-max_)
-
-  @al.computation
-  def centered(self) =
-    mean_ = self.spanned.mean()
-    (self.series - mean_)
-
+@fixture
+def numeric_df() =
+  pd.DataFrame(np.random.random((5,10)))
 
 @fixture
-def flights() =
-  from os.path import dirname, join
-  (dirname(__file__) `join` 'flights.csv') |> pd.read_csv
-
-#@fixture
-#def d2(flights) = flights |> al.D2
-
-@fixture(params=(flights().iterrows() |> map$(-> _[1])))
-def row(request) = request.param
-
-@fixture(params=(flights().transpose().iterrows()|>map$(-> _[1])))
-def col(request) = request.param
+def numeric_d2(numeric_df) =
+  al.D2.from_df(numeric_df, al.Question)
 
 @fixture
-def obs(row) = al.Observation(row)
+def nonnumeric_d2(numeric_df) =
+  al.D2.from_df(numeric_df.astype(str), al.Question)
 
-@fixture
-def question(col) =
-  Question(col)
 
 def test_creation_of_feature(question, col):
   assert isinstance(question, al.D1)
   assert isinstance(question, al.Feature)
   assert np.all(question.series == col)
+
+def test_correct_df(flights, d2):
+  assert np.all(flights == d2.df)
+
+class TestValidWith:
+  def test_valid_with_all_numeric(self,numeric_d2):
+    assert (numeric_d2.d1s |> map$(.is_numeric) |> list |> all)
+
+  def test_valid_with_all_nonnumeric(self, nonnumeric_d2):
+    assert not (nonnumeric_d2.d1s |> map$(.is_numeric) |> list |> any)

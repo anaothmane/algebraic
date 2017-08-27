@@ -3,10 +3,41 @@ import numpy as _np
 from functools import lru_cache
 
 data D1(series):
-  def __repr__(self) =
-    f"{self.__class__}({self.series.name})"
+  def __repr__(self) = f"{self.__class__}({self.series.name})"
 
 data Observation(series) from D1
 data Feature(series) from D1
 
 computation = lru_cache(maxsize=128)(property)
+
+def valid_with(filtre):
+  def wrapper(fn):
+    if filtre:
+      return fn
+    else:
+      raise ValueError(f"{fn} call failed f{filtre}")
+  return wrapper
+
+def interface(attrs):
+  def wrapper(cls):
+    cls.__json_attrs__ = attrs
+    return cls
+  return wrapper
+
+
+
+data D2(*d1s):
+  def __repr__(self) = f"{self.__class__}({self.df.head(5)})"
+
+  @computation
+  def df(self) =
+    self.d1s |> map$(.series) |> _pd.concat$(axis=1)
+
+  @classmethod
+  def from_df(cls, df, Feature:Feature=Feature) =
+    (df
+      |> .transpose()
+      |> .iterrows()
+      |> map$(.[1])
+      |> map$(Feature)
+      |*> datamaker(cls))

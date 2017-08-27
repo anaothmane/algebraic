@@ -1,0 +1,25 @@
+import algebraic as _al
+
+
+@_al.interface(
+  ['spanned', 'centered']
+)
+data Question(series) from _al.Feature:
+  @_al.computation
+  def is_numeric(self) =
+    not self.series.unique() |> map$(-> str(_)==_) |> all
+
+  @_al.computation
+  @_al.valid_with('is_numeric')
+  def spanned(self):
+    if self.is_numeric:
+      min_, max_ = self.series.min(), self.series.max()
+      return (self.series - max_)/(min_-max_)
+    else:
+      raise ValueError(f"{self} is not numeric")
+
+  @_al.computation
+  @_al.valid_with('is_numeric')
+  def centered(self) =
+    mean_ = self.spanned.mean()
+    (self.series - mean_)

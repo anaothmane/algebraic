@@ -1,0 +1,25 @@
+from pytest import fixture, raises
+import algebraic as al
+import seaborn as sns
+import pandas as pd
+import numpy as np
+
+
+class TestQuestion:
+  def test_creation_of_feature(self, question, col):
+    assert isinstance(question, al.D1)
+    assert isinstance(question, al.Feature)
+    assert np.all(question.series == col)
+
+  def test_no_fns_for_nonnumeric(self, d2):
+    assert (d2.d1s |> map$(.is_numeric) |> list) == [True,False,True]
+    for d1 in d2.d1s:
+      if d1.is_numeric:
+        assert type(d1.spanned) is pd.Series
+      else:
+        with raises(ValueError): d1.centered
+
+  def test_keeping_attrs(self, question):
+    assert hasattr(question, '__json_attrs__')
+    print(question.__dict__)
+    assert False

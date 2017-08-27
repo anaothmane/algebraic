@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# __coconut_hash__ = 0xf2dce4b8
+# __coconut_hash__ = 0xc4b5795e
 
 # Compiled with Coconut version 1.2.3 [Colonel]
 
@@ -401,68 +401,36 @@ _coconut_MatchError, _coconut_count, _coconut_enumerate, _coconut_reversed, _coc
 
 # Compiled Coconut: ------------------------------------------------------
 
-import pandas as _pd
-import numpy as _np
-from functools import lru_cache
-
-class D1(_coconut.collections.namedtuple("D1", "series")):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-    def __repr__(self):
-        return f"{self.__class__}({self.series.name})"
-
-class Observation(_coconut.collections.namedtuple("Observation", "series"), D1):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-class Feature(_coconut.collections.namedtuple("Feature", "series"), D1):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-
-computation = lru_cache(maxsize=128)(property)
-
-def valid_with(filtre):
-    def wrapper(fn):
-        if filtre:
-            return fn
-        else:
-            raise ValueError(f"{fn} call failed f{filtre}")
-    return wrapper
-
-def interface(attrs):
-    def wrapper(cls):
-        cls.__json_attrs__ = attrs
-        return cls
-    return wrapper
+from pytest import fixture
+from pytest import raises
+import algebraic as al
+import seaborn as sns
+import pandas as pd
+import numpy as np
 
 
+@fixture
+def flights():
+    from os.path import dirname
+    from os.path import join
+    return (pd.read_csv)(((join)(dirname(__file__), 'flights.csv')))
 
-class D2(_coconut.collections.namedtuple("D2", "d1s")):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-    def __new__(_cls, *d1s):
-        return _coconut.tuple.__new__(_cls, d1s)
-    @_coconut.classmethod
-    def _make(cls, iterable, *, new=_coconut.tuple.__new__, len=None):
-        return new(cls, iterable)
-    def _asdict(self):
-        return _coconut.OrderedDict([("d1s", self[:])])
-    def __repr__(self):
-        return "D2(*d1s=%r)" % (self[:],)
-    def _replace(_self, **kwds):
-        result = self._make(kwds.pop("d1s", _self))
-        if kwds:
-            raise _coconut.ValueError("Got unexpected field names: %r" % kwds.keys())
-        return result
-    @_coconut.property
-    def d1s(self):
-        return self[:]
-    def __repr__(self):
-        return f"{self.__class__}({self.df.head(5)})"
+@fixture
+def d2(flights):
+    return (_coconut_partial(al.D2.from_df, {1: al.Question}, 2))(flights)
 
-    @computation
-    def df(self):
-        return (_coconut.functools.partial(_pd.concat, axis=1))((_coconut.functools.partial(map, _coconut.operator.attrgetter("series")))(self.d1s))
+@fixture(params=((_coconut.functools.partial(map, lambda _=None: _[1]))(flights().iterrows())))
+def row(request):
+    return request.param
 
-    @classmethod
-    def from_df(cls, df, Feature: Feature=Feature):
-        return ((datamaker(cls))(*(_coconut.functools.partial(map, Feature))((_coconut.functools.partial(map, _coconut.operator.itemgetter(1)))((_coconut.operator.methodcaller("iterrows"))((_coconut.operator.methodcaller("transpose"))(df))))))
+@fixture(params=((_coconut.functools.partial(map, lambda _=None: _[1]))(flights().transpose().iterrows())))
+def col(request):
+    return request.param
+
+@fixture
+def obs(row):
+    return al.Observation(row)
+
+@fixture
+def question(col):
+    return al.Question(col)

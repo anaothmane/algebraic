@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# __coconut_hash__ = 0xe0025d3b
+# __coconut_hash__ = 0x7c6df58e
 
 # Compiled with Coconut version 1.2.3 [Colonel]
 
@@ -402,51 +402,36 @@ _coconut_MatchError, _coconut_count, _coconut_enumerate, _coconut_reversed, _coc
 # Compiled Coconut: ------------------------------------------------------
 
 from pytest import fixture
+from pytest import raises
 import algebraic as al
 import seaborn as sns
 import pandas as pd
 import numpy as np
 
-class Question(_coconut.collections.namedtuple("Question", "series"), al.Feature):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-    @al.computation
-    def spanned(self):
-        min_, max_ = self.series.min(), self.series.max()
-        return (self.series - max_) / (min_ - max_)
-
-    @al.computation
-    def centered(self):
-        mean_ = self.spanned.mean()
-        return (self.series - mean_)
-
+@fixture
+def numeric_df():
+    return pd.DataFrame(np.random.random((5, 10)))
 
 @fixture
-def flights():
-    from os.path import dirname
-    from os.path import join
-    return (pd.read_csv)(((join)(dirname(__file__), 'flights.csv')))
-
-#@fixture
-#def d2(flights) = flights |> al.D2
-
-@fixture(params=((_coconut.functools.partial(map, lambda _=None: _[1]))(flights().iterrows())))
-def row(request):
-    return request.param
-
-@fixture(params=((_coconut.functools.partial(map, lambda _=None: _[1]))(flights().transpose().iterrows())))
-def col(request):
-    return request.param
+def numeric_d2(numeric_df):
+    return al.D2.from_df(numeric_df, al.Question)
 
 @fixture
-def obs(row):
-    return al.Observation(row)
+def nonnumeric_d2(numeric_df):
+    return al.D2.from_df(numeric_df.astype(str), al.Question)
 
-@fixture
-def question(col):
-    return Question(col)
 
 def test_creation_of_feature(question, col):
     assert isinstance(question, al.D1)
     assert isinstance(question, al.Feature)
     assert np.all(question.series == col)
+
+def test_correct_df(flights, d2):
+    assert np.all(flights == d2.df)
+
+class TestValidWith:
+    def test_valid_with_all_numeric(self, numeric_d2):
+        assert ((all)((list)((_coconut.functools.partial(map, _coconut.operator.attrgetter("is_numeric")))(numeric_d2.d1s))))
+
+    def test_valid_with_all_nonnumeric(self, nonnumeric_d2):
+        assert not ((any)((list)((_coconut.functools.partial(map, _coconut.operator.attrgetter("is_numeric")))(nonnumeric_d2.d1s))))

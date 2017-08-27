@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# __coconut_hash__ = 0xf2dce4b8
+# __coconut_hash__ = 0x25bf48a4
 
 # Compiled with Coconut version 1.2.3 [Colonel]
 
@@ -401,68 +401,28 @@ _coconut_MatchError, _coconut_count, _coconut_enumerate, _coconut_reversed, _coc
 
 # Compiled Coconut: ------------------------------------------------------
 
-import pandas as _pd
-import numpy as _np
-from functools import lru_cache
+import algebraic as _al
 
-class D1(_coconut.collections.namedtuple("D1", "series")):
+
+@_al.interface(['spanned', 'centered'])
+class Question(_coconut.collections.namedtuple("Question", "series"), _al.Feature):
     __slots__ = ()
     __ne__ = _coconut.object.__ne__
-    def __repr__(self):
-        return f"{self.__class__}({self.series.name})"
+    @_al.computation
+    def is_numeric(self):
+        return not (all)((_coconut.functools.partial(map, lambda _=None: str(_) == _))(self.series.unique()))
 
-class Observation(_coconut.collections.namedtuple("Observation", "series"), D1):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-class Feature(_coconut.collections.namedtuple("Feature", "series"), D1):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-
-computation = lru_cache(maxsize=128)(property)
-
-def valid_with(filtre):
-    def wrapper(fn):
-        if filtre:
-            return fn
+    @_al.computation
+    @_al.valid_with('is_numeric')
+    def spanned(self):
+        if self.is_numeric:
+            min_, max_ = self.series.min(), self.series.max()
+            return (self.series - max_) / (min_ - max_)
         else:
-            raise ValueError(f"{fn} call failed f{filtre}")
-    return wrapper
+            raise ValueError(f"{self} is not numeric")
 
-def interface(attrs):
-    def wrapper(cls):
-        cls.__json_attrs__ = attrs
-        return cls
-    return wrapper
-
-
-
-class D2(_coconut.collections.namedtuple("D2", "d1s")):
-    __slots__ = ()
-    __ne__ = _coconut.object.__ne__
-    def __new__(_cls, *d1s):
-        return _coconut.tuple.__new__(_cls, d1s)
-    @_coconut.classmethod
-    def _make(cls, iterable, *, new=_coconut.tuple.__new__, len=None):
-        return new(cls, iterable)
-    def _asdict(self):
-        return _coconut.OrderedDict([("d1s", self[:])])
-    def __repr__(self):
-        return "D2(*d1s=%r)" % (self[:],)
-    def _replace(_self, **kwds):
-        result = self._make(kwds.pop("d1s", _self))
-        if kwds:
-            raise _coconut.ValueError("Got unexpected field names: %r" % kwds.keys())
-        return result
-    @_coconut.property
-    def d1s(self):
-        return self[:]
-    def __repr__(self):
-        return f"{self.__class__}({self.df.head(5)})"
-
-    @computation
-    def df(self):
-        return (_coconut.functools.partial(_pd.concat, axis=1))((_coconut.functools.partial(map, _coconut.operator.attrgetter("series")))(self.d1s))
-
-    @classmethod
-    def from_df(cls, df, Feature: Feature=Feature):
-        return ((datamaker(cls))(*(_coconut.functools.partial(map, Feature))((_coconut.functools.partial(map, _coconut.operator.itemgetter(1)))((_coconut.operator.methodcaller("iterrows"))((_coconut.operator.methodcaller("transpose"))(df))))))
+    @_al.computation
+    @_al.valid_with('is_numeric')
+    def centered(self):
+        mean_ = self.spanned.mean()
+        return (self.series - mean_)

@@ -1,0 +1,26 @@
+from pytest import fixture, raises
+import algebraic as al
+import seaborn as sns
+import pandas as pd
+import numpy as np
+
+
+@fixture
+def flights() =
+  from os.path import dirname, join
+  (dirname(__file__) `join` 'flights.csv') |> pd.read_csv
+
+@fixture
+def d2(flights) = flights |> al.D2.from_df$(?, al.Question)
+
+@fixture(params=(flights().iterrows() |> map$(-> _[1])))
+def row(request) = request.param
+
+@fixture(params=(flights().transpose().iterrows()|>map$(-> _[1])))
+def col(request) = request.param
+
+@fixture
+def obs(row) = al.Observation(row)
+
+@fixture
+def question(col) = al.Question(col)
